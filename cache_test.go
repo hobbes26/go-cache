@@ -81,11 +81,11 @@ func TestStaleCacheTimes(t *testing.T) {
 	<-time.After(10 * time.Millisecond)
 	val, found = tc.GetStale("a")
 	if found || val == nil {
-		t.Error("Value should be returned with found as false, post expiration without cleanup")
+		t.Error("Value should be returned with found as false, post expiration")
 	}
 	val, found = tc.Get("a")
 	if found || val != nil {
-		t.Error("Value should be returned  as nil with found as false, post expiration without cleanup")
+		t.Error("In Get(), post expiration, value should be returned as nil with found as false")
 	}
 	tc.DeleteExpired()
 	val, found = tc.GetStale("a")
