@@ -135,6 +135,27 @@ func (c *cache) Get(k string) (interface{}, bool) {
 	return item.Object, true
 }
 
+// Get an item from the cache. Returns the item or nil, and a bool indicating
+// whether the key was found. Differs from Get(key) in that it returns value of
+// expired (and not deleted) item as well.
+func (c *cache) GetStale(k string) (interface{}, bool) {
+	c.mu.RLock()
+	// "Inlining" of get and Expired
+	item, found := c.items[k]
+	if !found {
+		c.mu.RUnlock()
+		return nil, false
+	}
+	if item.Expiration > 0 {
+		if time.Now().UnixNano() > item.Expiration {
+			c.mu.RUnlock()
+			return item.Object, false
+		}
+	}
+	c.mu.RUnlock()
+	return item.Object, true
+}
+
 // GetWithExpiration returns an item and its expiration time from the cache.
 // It returns the item or nil, the expiration time if one is set (if the item
 // never expires a zero value for time.Time is returned), and a bool indicating

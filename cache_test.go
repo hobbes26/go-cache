@@ -68,6 +68,32 @@ func TestCache(t *testing.T) {
 	}
 }
 
+func TestStaleCacheTimes(t *testing.T) {
+	var found bool
+	var val interface{}
+
+	tc := New(10*time.Millisecond, 0)
+	tc.Set("a", 1, DefaultExpiration)
+	val, found = tc.GetStale("a")
+	if !found || val == nil {
+		t.Error("Did not find a even though it was set to expire later")
+	}
+	<-time.After(10 * time.Millisecond)
+	val, found = tc.GetStale("a")
+	if found || val == nil {
+		t.Error("Value should be returned with found as false, post expiration without cleanup")
+	}
+	val, found = tc.Get("a")
+	if found || val != nil {
+		t.Error("Value should be returned  as nil with found as false, post expiration without cleanup")
+	}
+	tc.DeleteExpired()
+	val, found = tc.GetStale("a")
+	if found || val != nil {
+		t.Error("Value should be returned as nil with found as false, after cleaning up expired items")
+	}
+}
+
 func TestCacheTimes(t *testing.T) {
 	var found bool
 
